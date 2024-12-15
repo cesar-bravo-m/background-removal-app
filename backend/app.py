@@ -7,7 +7,6 @@ from flask_cors import CORS
 import numpy as np
 
 app = Flask(__name__)
-# Add CORS support for localhost:3000
 CORS(app, resources={
     r"/*": {
         "origins": ["http://localhost:3000"],
@@ -15,6 +14,8 @@ CORS(app, resources={
         "allow_headers": ["Content-Type"]
     }
 })
+
+UPLOAD_FOLDER = '/app/uploads'
 
 def remove_background(filename):
     img = Image.open(filename).convert("RGBA")
@@ -28,16 +29,14 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    # filename = './photo.png'
     filename = request.json['filename']
-    result_image = remove_background(filename)
+    result_image = remove_background(UPLOAD_FOLDER + '/' + filename)
     output = io.BytesIO()
     result_image.save(output, format='PNG')
     output.seek(0)
     return send_file(output, mimetype='image/png')
 
 if __name__ == '__main__':
-    # Read filename from command line
     filename = sys.argv[1]
     result_image = remove_background(filename)
     result_image.save(f'{filename}_result.png')

@@ -31,13 +31,7 @@ export async function POST(request: Request) {
     }
 
     // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'backend');
-    try {
-      await writeFile(`${uploadsDir}/.gitkeep`, '');
-    } catch (error) {
-        console.log(error)
-      // Directory already exists, continue
-    }
+    const uploadsDir = join(process.cwd(), 'uploads');
 
     // Convert the file to a Buffer
     const bytes = await file.arrayBuffer();

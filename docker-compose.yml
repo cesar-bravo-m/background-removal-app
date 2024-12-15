@@ -1,0 +1,30 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - photos:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - BACKEND_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - photos:/app/uploads
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+      - FRONTEND_URL=http://localhost:3000
+
+volumes:
+  photos:

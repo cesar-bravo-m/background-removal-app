@@ -1,5 +1,7 @@
 'use client'
 import { useState } from "react";
+import '../config.ts';
+
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

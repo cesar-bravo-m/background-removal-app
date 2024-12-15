@@ -1,5 +1,6 @@
 import io
 import sys
+import os
 from PIL import Image
 from rembg import remove
 from flask import Flask, request, send_file
@@ -9,7 +10,7 @@ import numpy as np
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:3000"],
+        "origins": [os.environ.get('FRONTEND_URL', 'http://localhost:3000')],
         "methods": ["GET", "POST"],
         "allow_headers": ["Content-Type"]
     }

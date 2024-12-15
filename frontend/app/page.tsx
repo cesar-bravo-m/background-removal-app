@@ -1,6 +1,5 @@
 'use client'
 import { useState } from "react";
-import { config } from "./config";
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

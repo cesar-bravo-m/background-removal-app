@@ -1,6 +1,6 @@
 'use client'
 import { useState } from "react";
-import './config';
+import { config } from "./config";
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -50,7 +50,7 @@ export default function Home() {
 
       const data = await response.json();
 
-      const response2 = await fetch(`${process.env.BACKEND_URL}/upload`, {
+      const response2 = await fetch(`${config.backendUrl}/upload`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

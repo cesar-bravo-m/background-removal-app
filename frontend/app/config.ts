@@ -2,4 +2,7 @@
 import { loadEnvConfig } from '@next/env';
 
 loadEnvConfig(process.cwd());
-console.log("### ", process.env.BACKEND_URL);
+
+export const config = {
+    backendUrl: process.env.BACKEND_URL || 'http://localhost:5000'
+}

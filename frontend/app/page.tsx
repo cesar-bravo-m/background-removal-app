@@ -50,7 +50,7 @@ export default function Home() {
       const data = await response.json();
 
       // Get url from the window's location and append :5000
-      const bakendUrl = window.location.origin + ':5000';
+      const bakendUrl = window.location.origin.replace('3000', '5000');
       const response2 = await fetch(`${bakendUrl}/upload`, {
         method: 'POST',
         headers: {

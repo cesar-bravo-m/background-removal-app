@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/env": "^15.1.0",
     "bg-remover": "file:",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",

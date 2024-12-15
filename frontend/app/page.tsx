@@ -50,7 +50,9 @@ export default function Home() {
 
       const data = await response.json();
 
-      const response2 = await fetch(`${config.backendUrl}/upload`, {
+      // Get url from the window's location and append :5000
+      const bakendUrl = window.location.origin + ':5000';
+      const response2 = await fetch(`${bakendUrl}/upload`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

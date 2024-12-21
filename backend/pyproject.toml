@@ -1,0 +1,23 @@
+[project]
+name = "rembg-api"
+version = "0.0.0"
+description = "Remove background from images"
+authors = [
+    { name = "César Bravo", email = "cbravo@example.com" }
+]
+dependencies = [
+    'attrs',
+    'onnxruntime',
+    'opencv-python-headless',
+    'numpy',
+    'pillow',
+    'requests',
+    'Flask',
+    'Flask-Cors',
+    'rembg',
+    'tqdm',
+    'urllib3',
+    'Werkzeug',
+    'Pillow',
+    'zipp',
+]

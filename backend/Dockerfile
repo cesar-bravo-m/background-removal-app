@@ -36,5 +36,5 @@ RUN pip install dist/*.whl
 EXPOSE 5000
 
 # Command to run the application
-#CMD ["waitress-serve", "--host", "0.0.0.0", "--port", "5000", "--call", "app:create_app"]
-CMD ["flask", "run", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["waitress-serve", "--host", "0.0.0.0", "--port", "5000", "--call", "app:create_app"]
+#CMD ["flask", "run", "--host", "0.0.0.0", "--port", "5000"]

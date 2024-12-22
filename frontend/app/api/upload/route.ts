@@ -15,9 +15,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only PNG and JPEG/JPG allowed.' },
+        { error: 'Invalid file type. Only PNG, JPEG, JPG and WEBP allowed.' },
         { status: 400 }
       );
     }

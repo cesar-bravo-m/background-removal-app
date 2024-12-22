@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from "react";
+import JSZip from 'jszip';
 
 interface ProcessedImage {
   id: string;
@@ -16,6 +17,15 @@ const validateImage = (url: string): Promise<boolean> => {
     img.src = url;
   });
 };
+
+const sampleImages = [
+  { src: '/samples/1.webp', name: 'Muestra 1' },
+  { src: '/samples/2.webp', name: 'Muestra 2' },
+  { src: '/samples/3.jpg', name: 'Muestra 3' },
+  { src: '/samples/4.webp', name: 'Muestra 4' },
+  { src: '/samples/5.jpg', name: 'Muestra 5' },
+  { src: '/samples/6.jpg', name: 'Muestra 6' },
+];
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -108,8 +118,8 @@ export default function Home() {
     
     if (file) {
       // Check file type
-      if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
-        setError('Por favor, selecciona solo archivos PNG, JPEG o JPG');
+      if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
+        setError('Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG');
         setSelectedFile(null);
         setPreviewUrl(null);
         return;
@@ -150,6 +160,7 @@ export default function Home() {
       setError(error instanceof Error ? error.message : 'Error al procesar la imagen');
     } finally {
       setIsProcessing(false);
+      setProgress(0);
     }
   };
 
@@ -181,6 +192,97 @@ export default function Home() {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      // Check file type
+      if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
+        setError('Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG');
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        return;
+      }
+
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const downloadAllImages = async () => {
+    const zip = new JSZip();
+    
+    // Create a folder for originals and processed images
+    const originalsFolder = zip.folder("originales");
+    const processedFolder = zip.folder("procesados");
+
+    // Function to fetch and add file to zip
+    const addFileToZip = async (url: string, filename: string, folder: JSZip) => {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        folder.file(filename, blob);
+      } catch (error) {
+        console.error(`Error adding file ${filename}:`, error);
+      }
+    };
+
+    // Add all images to zip
+    const promises = previousImages.map(async (img, index) => {
+      const originalExt = img.originalUrl.split('.').pop() || 'jpg';
+      const processedExt = img.processedUrl.split('.').pop() || 'png';
+      
+      await Promise.all([
+        addFileToZip(
+          img.originalUrl, 
+          `imagen_${index + 1}.${originalExt}`, 
+          originalsFolder!
+        ),
+        addFileToZip(
+          img.processedUrl, 
+          `imagen_${index + 1}.${processedExt}`, 
+          processedFolder!
+        )
+      ]);
+    });
+
+    await Promise.all(promises);
+
+    // Generate and download zip
+    const content = await zip.generateAsync({ type: "blob" });
+    const downloadUrl = URL.createObjectURL(content);
+    
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = "imagenes_procesadas.zip";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+  };
+
+  const handleSampleSelect = async (sampleSrc: string) => {
+    try {
+      const response = await fetch(sampleSrc);
+      const blob = await response.blob();
+      const file = new File([blob], sampleSrc.split('/').pop() || 'sample.jpg', { type: blob.type });
+      
+      setSelectedFile(file);
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+    } catch (error) {
+      setError('Error al cargar la imagen de muestra');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-black">
       <main className="w-full max-w-7xl">
@@ -203,6 +305,8 @@ export default function Home() {
                     !previewUrl ? 'border-2 border-dashed border-gray-300 dark:border-gray-600 p-8' : ''
                   } transition-colors hover:border-blue-500 dark:hover:border-blue-400 
                   bg-gray-50 dark:bg-gray-800/50`}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
                 >
                   <input
                     type="file"
@@ -226,10 +330,10 @@ export default function Home() {
                               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <p className="mt-4 text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-blue-500 transition-colors">
-                        Haz clic para subir o arrastra y suelta
+                        Arrastra y suelta o haz clic para subir
                       </p>
                       <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                        PNG, JPG o JPEG (máx. 10MB)
+                        WEBP, PNG, JPG o JPEG (máx. 20MB)
                       </p>
                     </label>
                   ) : (
@@ -250,6 +354,34 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+
+                {!previewUrl && (
+                  <div className="mt-8">
+                    <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      O elige una de las imágenes de muestra
+                    </p>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+                      {sampleImages.map((sample, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSampleSelect(sample.src)}
+                          className="relative group aspect-square rounded-lg overflow-hidden"
+                        >
+                          <img
+                            src={sample.src}
+                            alt={sample.name}
+                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-white text-xs font-medium">
+                              Seleccionar
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {selectedFile && (
                   <p className="mt-4 text-sm text-center text-gray-600 dark:text-gray-400">
@@ -423,10 +555,11 @@ export default function Home() {
         </div>
       </main>
 
-      {previousImages.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm p-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex gap-4 overflow-x-auto pb-2 pt-2">
+      {/* Bottom Bar - Always visible */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex gap-4 overflow-x-auto pb-2 pt-2 flex-grow">
               {/* New Upload Button */}
               <button
                 onClick={handleReset}
@@ -492,9 +625,34 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            
+            {/* Download All Button */}
+            <button
+              onClick={downloadAllImages}
+              disabled={previousImages.length === 0}
+              className="ml-4 flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-500 
+                        text-white rounded-lg transition-colors flex items-center gap-2
+                        shadow-lg hover:shadow-xl disabled:bg-gray-700 disabled:cursor-not-allowed
+                        disabled:hover:bg-gray-700 disabled:text-gray-400"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              <span className="hidden sm:inline">Descargar todos</span>
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Modal */}
       {selectedImage && (

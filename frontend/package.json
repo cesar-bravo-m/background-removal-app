@@ -11,6 +11,7 @@
   "dependencies": {
     "@next/env": "^15.1.0",
     "bg-remover": "file:",
+    "jszip": "^3.10.1",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106"

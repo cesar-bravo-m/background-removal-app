@@ -6,6 +6,14 @@ import CookieConsent from '@/app/components/CookieConsent'
 import { ProcessedImage } from '@/app/types';
 import { validateImage } from '@/app/utils';
 import Topbar from "./components/Topbar";
+import {
+  addImage,
+  deleteImage as deleteImageAction,
+  setImages,
+  selectImages
+} from '@/lib/features/images/imagesSlice';
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
+import BottomBar from "./components/BottomBar";
 
 const sampleImages = [
   { src: '/samples/1.webp', name: 'Muestra 1' },
@@ -17,6 +25,8 @@ const sampleImages = [
 ];
 
 export default function Home() {
+  const dispatch = useAppDispatch();
+  const images = useAppSelector(selectImages);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
@@ -24,7 +34,6 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [previousImages, setPreviousImages] = useState<ProcessedImage[]>([]);
   const [selectedImage, setSelectedImage] = useState<ProcessedImage | null>(null);
   const [language,] = useState<'en' | 'es'>('en');
 
@@ -51,10 +60,10 @@ export default function Home() {
 
   useEffect(() => {
     const loadAndValidateImages = async () => {
-      const stored = localStorage.getItem('processedImages');
+      const stored = images;
       if (!stored) return;
 
-      const storedImages: ProcessedImage[] = JSON.parse(stored);
+      const storedImages: ProcessedImage[] = stored;
       const validatedImages = await Promise.all(
         storedImages.map(async (img) => {
           const [originalValid, processedValid] = await Promise.all([
@@ -70,10 +79,8 @@ export default function Home() {
         .map(({ img }) => img);
 
       if (validImages.length !== storedImages.length) {
-        localStorage.setItem('processedImages', JSON.stringify(validImages));
+        dispatch(setImages(validImages));
       }
-
-      setPreviousImages(validImages);
     };
 
     loadAndValidateImages();
@@ -81,7 +88,6 @@ export default function Home() {
 
   const saveToHistory = async (original: string, processed: string) => {
     try {
-      // Convert blob URLs to base64
       const [originalBlob, processedBlob] = await Promise.all([
         fetch(original).then(r => r.blob()),
         fetch(processed).then(r => r.blob())
@@ -107,9 +113,7 @@ export default function Home() {
         timestamp: Date.now()
       };
 
-      const updatedImages = [newImage, ...previousImages].slice(0, 10);
-      setPreviousImages(updatedImages);
-      localStorage.setItem('processedImages', JSON.stringify(updatedImages));
+      dispatch(addImage(newImage));
     } catch (error) {
       console.error('Error saving to history:', error);
     }
@@ -183,11 +187,7 @@ export default function Home() {
   };
 
   const deleteImage = (id: string) => {
-    setPreviousImages(prev => {
-      const newImages = prev.filter(img => img.id !== id);
-      localStorage.setItem('processedImages', JSON.stringify(newImages));
-      return newImages;
-    });
+    dispatch(deleteImageAction(id));
     // If the deleted image is currently selected in modal, close the modal
     if (selectedImage?.id === id) {
       setSelectedImage(null);
@@ -237,8 +237,7 @@ export default function Home() {
       }
     };
 
-    // Add all images to zip
-    const promises = previousImages.map(async (img, index) => {
+    const promises = images.map(async (img, index) => {
       const originalExt = img.originalUrl.split('.').pop() || 'jpg';
       const processedExt = img.processedUrl.split('.').pop() || 'png';
       
@@ -565,108 +564,7 @@ export default function Home() {
         </main>
       </div>
 
-      {/* Bottom bar remains the same */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex gap-4 overflow-x-auto pb-2 pt-2 flex-grow">
-              {/* New Upload Button */}
-              <button
-                onClick={handleReset}
-                className="flex-shrink-0 h-20 w-20 rounded-lg border-2 border-dashed border-gray-700 
-                         hover:border-blue-500 transition-colors flex items-center justify-center
-                         group bg-gray-800/50 hover:bg-gray-800"
-              >
-                <svg 
-                  className="w-8 h-8 text-gray-500 group-hover:text-blue-500 transition-colors" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M12 4v16m8-8H4" 
-                  />
-                </svg>
-              </button>
-
-              {/* Previous Images */}
-              {previousImages.map((img) => (
-                <div key={img.id} className="flex-shrink-0 relative group">
-                  <button
-                    onClick={() => setSelectedImage(img)}
-                    className="relative"
-                  >
-                    <img
-                      src={img.processedUrl}
-                      alt="Processed thumbnail"
-                      className="h-20 w-20 object-cover rounded-lg border border-gray-700 hover:border-blue-500 transition-colors"
-                    />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                      <span className="text-white text-xs">
-                        {t('view')}
-                      </span>
-                    </div>
-                  </button>
-                  {/* Delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteImage(img.id);
-                    }}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 
-                               transition-opacity flex items-center justify-center hover:bg-red-600"
-                    title={t('delete')}
-                  >
-                    <svg 
-                      className="w-4 h-4 text-white" 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="currentColor"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M6 18L18 6M6 6l12 12" 
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-            
-            {/* Download All Button */}
-            <button
-              onClick={downloadAllImages}
-              disabled={previousImages.length === 0}
-              className="ml-4 flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-500 
-                        text-white rounded-lg transition-colors flex items-center gap-2
-                        shadow-lg hover:shadow-xl disabled:bg-gray-700 disabled:cursor-not-allowed
-                        disabled:hover:bg-gray-700 disabled:text-gray-400"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                />
-              </svg>
-              <span className="hidden sm:inline">
-                {t('downloadAll')}
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <BottomBar />
 
       {/* Modal */}
       {selectedImage && (

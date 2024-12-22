@@ -33,7 +33,16 @@ export const translations: Translations = {
     error_invalidType: "Please select only WEBP, PNG, JPEG or JPG files",
     error_uploadError: "Error uploading file",
     error_processingError: "Error processing image",
-    error_sampleError: "Error loading sample image"
+    error_sampleError: "Error loading sample image",
+    cookieConsent: "This site uses cookies to improve your experience. By continuing to browse, you accept their use.",
+    accept: "Accept",
+    tokens: "Tokens",
+    tokensRemaining: "tokens remaining",
+    noTokens: "No tokens remaining",
+    getMoreTokens: "Get More Tokens",
+    buyTokens: "Buy Tokens",
+    close: "Close",
+    tokenPrice: "Price",
   },
   es: {
     title: "Eliminador de Fondos",
@@ -63,6 +72,19 @@ export const translations: Translations = {
     error_invalidType: "Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG",
     error_uploadError: "Error al subir el archivo",
     error_processingError: "Error al procesar la imagen",
-    error_sampleError: "Error al cargar la imagen de muestra"
+    error_sampleError: "Error al cargar la imagen de muestra",
+    cookieConsent: "Este sitio utiliza cookies para mejorar tu experiencia. Al continuar navegando, aceptas su uso.",
+    accept: "Aceptar",
+    tokens: "Tokens",
+    tokensRemaining: "tokens restantes",
+    noTokens: "Sin tokens",
+    getMoreTokens: "Obtener más",
+    buyTokens: "Comprar Tokens",
+    close: "Cerrar",
+    tokenPrice: "Precio",
   }
 }; 
+
+export const t = (key: string, language: string = 'en') => {
+  return translations[language][key] || key;
+};

@@ -14,6 +14,7 @@ UPLOAD_FOLDER = '/app/uploads'
 def create_app(*args, **kwargs):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_urlsafe(32))
+    # app.config['SECRET_KEY'] = 'key'
     CORS(app, resources={
         r"/*": {
             "origins": [os.environ.get('FRONTEND_URL', 'http://localhost:3000')],

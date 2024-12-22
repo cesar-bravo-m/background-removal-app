@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.9.6",
     "@next/env": "^15.1.0",
     "bg-remover": "file:",
     "jszip": "^3.10.1",

@@ -48,7 +48,7 @@ cd background-removal-app
 docker compose up --build
 ```
 
-4. Create a .env file in the backend directory with a random secret key:
+4. Create a .env file in the root directory with a random secret key:
 ```bash
 SECRET_KEY=your_secret_key
 ```

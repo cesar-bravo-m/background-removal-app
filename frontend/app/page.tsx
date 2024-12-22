@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from "react";
 import JSZip from 'jszip';
+import { translations } from './translations';
 
 interface ProcessedImage {
   id: string;
@@ -37,6 +38,11 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [previousImages, setPreviousImages] = useState<ProcessedImage[]>([]);
   const [selectedImage, setSelectedImage] = useState<ProcessedImage | null>(null);
+  const [language, setLanguage] = useState<'en' | 'es'>('en');
+
+  const t = (key: string) => {
+    return translations[language][key] || key;
+  };
 
   useEffect(() => {
     let progressInterval: NodeJS.Timeout;
@@ -284,278 +290,352 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-black">
-      <main className="w-full max-w-7xl">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-          <div className="px-6 py-8 sm:px-8 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
-              Eliminador de Fondos
-            </h1>
-            <p className="mt-2 text-center text-gray-600 dark:text-gray-400">
-              Sube una imagen para eliminar su fondo instantáneamente
-            </p>
-          </div>
-
-          <div className="p-6 sm:p-8">
-            {!processedImageUrl ? (
-              // Upload Section
-              <div className="max-w-md mx-auto">
-                <div 
-                  className={`relative group rounded-xl overflow-hidden ${
-                    !previewUrl ? 'border-2 border-dashed border-gray-300 dark:border-gray-600 p-8' : ''
-                  } transition-colors hover:border-blue-500 dark:hover:border-blue-400 
-                  bg-gray-50 dark:bg-gray-800/50`}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                >
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="fileInput"
-                  />
-                  {!previewUrl ? (
-                    <label
-                      htmlFor="fileInput"
-                      className="flex flex-col items-center cursor-pointer"
-                    >
-                      <svg 
-                        className="w-12 h-12 text-gray-400 group-hover:text-blue-500 transition-colors" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="mt-4 text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-blue-500 transition-colors">
-                        Arrastra y suelta o haz clic para subir
-                      </p>
-                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                        WEBP, PNG, JPG o JPEG (máx. 20MB)
-                      </p>
-                    </label>
-                  ) : (
-                    <div className="relative group">
-                      <img
-                        src={previewUrl}
-                        alt="Vista previa"
-                        className="w-full h-[50vh] object-contain rounded-xl"
-                      />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <label
-                          htmlFor="fileInput"
-                          className="cursor-pointer px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white font-medium transition-colors"
-                        >
-                          Elegir Otra Imagen
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {!previewUrl && (
-                  <div className="mt-8">
-                    <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      O elige una de las imágenes de muestra
-                    </p>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                      {sampleImages.map((sample, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleSampleSelect(sample.src)}
-                          className="relative group aspect-square rounded-lg overflow-hidden"
-                        >
-                          <img
-                            src={sample.src}
-                            alt={sample.name}
-                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="text-white text-xs font-medium">
-                              Seleccionar
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedFile && (
-                  <p className="mt-4 text-sm text-center text-gray-600 dark:text-gray-400">
-                    Seleccionado: {selectedFile.name}
-                  </p>
-                )}
-
-                {error && (
-                  <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg">
-                    <p className="text-sm text-red-600 dark:text-red-400 text-center">
-                      {error === 'Por favor, selecciona un archivo primero' ? 'Por favor, selecciona un archivo primero' :
-                       error === 'Por favor, selecciona solo archivos PNG, JPEG o JPG' ? 'Por favor, selecciona solo archivos PNG, JPEG o JPG' :
-                       error === 'Error al subir el archivo' ? 'Error al subir el archivo' :
-                       error === 'Error al procesar la imagen' ? 'Error al procesar la imagen' :
-                       error}
-                    </p>
-                  </div>
-                )}
-
-                <div className="relative">
-                  <button
-                    onClick={handleUpload}
-                    disabled={!selectedFile || isProcessing}
-                    className="w-full mt-6 px-6 py-3 rounded-xl bg-blue-600 text-white font-medium
-                             hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed
-                             transition-all duration-200 transform hover:scale-[1.02]
-                             disabled:hover:scale-100 shadow-lg hover:shadow-xl
-                             disabled:shadow-none"
-                  >
-                    {isProcessing ? 'Procesando...' : 'Eliminar Fondo'}
-                  </button>
-
-                  {isProcessing && (
-                    <div className="mt-4 space-y-2">
-                      <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 transition-all duration-300 ease-out"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-400">
-                        <span>
-                          {progress < 30 ? 'Analizando imagen...' :
-                           progress < 60 ? 'Detectando fondo...' :
-                           progress < 90 ? 'Removiendo fondo...' :
-                           'Finalizando...'}
-                        </span>
-                        <span>{Math.round(progress)}%</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              // Results Section
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Original Image */}
-                  <div className="relative rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800/50">
-                    <img
-                      src={previewUrl!}
-                      alt="Original"
-                      className="w-full h-[50vh] object-contain"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 p-4">
-                      <p className="text-white text-center font-medium">Original</p>
-                    </div>
-                  </div>
-
-                  {/* Processed Image */}
-                  <div className="relative rounded-xl overflow-hidden bg-[url('/grid.png')] bg-repeat">
-                    <img
-                      src={processedImageUrl}
-                      alt="Resultado procesado"
-                      className="w-full h-[50vh] object-contain transition-transform duration-300"
-                      style={{ transform: `rotate(${rotation}deg)` }}
-                    />
-                    <div className="absolute top-4 right-4 flex gap-2">
-                      <button
-                        onClick={rotateCounterclockwise}
-                        className="p-3 bg-white/90 dark:bg-black/90 rounded-full 
-                                  hover:bg-white dark:hover:bg-black 
-                                  transition-all duration-200 shadow-lg hover:shadow-xl 
-                                  transform hover:scale-110 backdrop-blur-sm"
-                        title="Rotar en sentido antihorario"
-                      >
-                        <svg 
-                          width="24" 
-                          height="24" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                          className="text-gray-800 dark:text-gray-200"
-                        >
-                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                          <path d="M3 3v5h5"/>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={rotateClockwise}
-                        className="p-3 bg-white/90 dark:bg-black/90 rounded-full 
-                                  hover:bg-white dark:hover:bg-black 
-                                  transition-all duration-200 shadow-lg hover:shadow-xl 
-                                  transform hover:scale-110 backdrop-blur-sm"
-                        title="Rotar en sentido horario"
-                      >
-                        <svg 
-                          width="24" 
-                          height="24" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                          className="text-gray-800 dark:text-gray-200"
-                        >
-                          <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                          <path d="M21 3v5h-5"/>
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="absolute bottom-4 right-4">
-                      <a
-                        href={processedImageUrl}
-                        download="imagen-procesada.png"
-                        className="flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-black/90 
-                                  rounded-lg hover:bg-white dark:hover:bg-black 
-                                  transition-all duration-200 shadow-lg hover:shadow-xl 
-                                  transform hover:scale-105 backdrop-blur-sm
-                                  text-gray-800 dark:text-gray-200 font-medium"
-                      >
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <line x1="12" y1="15" x2="12" y2="3" />
-                        </svg>
-                        Descargar
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Process Another Image Button */}
-                <div className="flex justify-center mt-8">
-                  <button
-                    onClick={handleReset}
-                    className="px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium
-                             hover:bg-gray-200 dark:hover:bg-gray-600
-                             transition-all duration-200 transform hover:scale-[1.02]
-                             shadow-lg hover:shadow-xl"
-                  >
-                    Procesar Otra Imagen
-                  </button>
-                </div>
-              </div>
-            )}
+    <div className="min-h-screen flex flex-col bg-black">
+      {/* Top Bar */}
+      <div className="w-full bg-gray-900/80 backdrop-blur-sm border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-end items-center h-14 gap-6">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-2 py-1 rounded ${
+                  language === 'en' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLanguage('es')}
+                className={`px-2 py-1 rounded ${
+                  language === 'es' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                ES
+              </button>
+            </div>
+            <a
+              href={language === 'en' ? '/faq-en' : '/faq'}
+              className="text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <svg 
+                className="w-5 h-5" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                />
+              </svg>
+              <span>FAQ</span>
+            </a>
+            <a
+              href="https://github.com/cesar-bravo-m/background-removal-app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>GitHub</span>
+            </a>
           </div>
         </div>
-      </main>
+      </div>
 
-      {/* Bottom Bar - Always visible */}
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
+        <main className="w-full max-w-7xl">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="px-6 py-8 sm:px-8 border-b border-gray-200 dark:border-gray-700">
+              <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
+                {t('title')}
+              </h1>
+              <p className="mt-2 text-center text-gray-600 dark:text-gray-400">
+                {t('subtitle')}
+              </p>
+            </div>
+
+            <div className="p-6 sm:p-8">
+              {!processedImageUrl ? (
+                // Upload Section
+                <div className="max-w-md mx-auto">
+                  <div 
+                    className={`relative group rounded-xl overflow-hidden ${
+                      !previewUrl ? 'border-2 border-dashed border-gray-300 dark:border-gray-600 p-8' : ''
+                    } transition-colors hover:border-blue-500 dark:hover:border-blue-400 
+                    bg-gray-50 dark:bg-gray-800/50`}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="fileInput"
+                    />
+                    {!previewUrl ? (
+                      <label
+                        htmlFor="fileInput"
+                        className="flex flex-col items-center cursor-pointer"
+                      >
+                        <svg 
+                          className="w-12 h-12 text-gray-400 group-hover:text-blue-500 transition-colors" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="mt-4 text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-blue-500 transition-colors">
+                          {t('uploadText')}
+                        </p>
+                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
+                          {t('fileTypes')}
+                        </p>
+                      </label>
+                    ) : (
+                      <div className="relative group">
+                        <img
+                          src={previewUrl}
+                          alt="Vista previa"
+                          className="w-full h-[50vh] object-contain rounded-xl"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <label
+                            htmlFor="fileInput"
+                            className="cursor-pointer px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white font-medium transition-colors"
+                          >
+                            {t('chooseAnother')}
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {!previewUrl && (
+                    <div className="mt-8">
+                      <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        {t('sampleImagesText')}
+                      </p>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+                        {sampleImages.map((sample, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleSampleSelect(sample.src)}
+                            className="relative group aspect-square rounded-lg overflow-hidden"
+                          >
+                            <img
+                              src={sample.src}
+                              alt={sample.name}
+                              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="text-white text-xs font-medium">
+                                {t('select')}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedFile && (
+                    <p className="mt-4 text-sm text-center text-gray-600 dark:text-gray-400">
+                      {t('selectedFile')}: {selectedFile.name}
+                    </p>
+                  )}
+
+                  {error && (
+                    <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                      <p className="text-sm text-red-600 dark:text-red-400 text-center">
+                        {error === t('selectFile') ? t('selectFile') :
+                         error === t('invalidType') ? t('invalidType') :
+                         error === t('uploadError') ? t('uploadError') :
+                         error === t('processingError') ? t('processingError') :
+                         error}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="relative">
+                    <button
+                      onClick={handleUpload}
+                      disabled={!selectedFile || isProcessing}
+                      className="w-full mt-6 px-6 py-3 rounded-xl bg-blue-600 text-white font-medium
+                               hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed
+                               transition-all duration-200 transform hover:scale-[1.02]
+                               disabled:hover:scale-100 shadow-lg hover:shadow-xl
+                               disabled:shadow-none"
+                    >
+                      {isProcessing ? t('processing') : t('removeBackground')}
+                    </button>
+
+                    {isProcessing && (
+                      <div className="mt-4 space-y-2">
+                        <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-500 transition-all duration-300 ease-out"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-sm text-gray-400">
+                          <span>
+                            {progress < 30 ? t('analyzing') :
+                             progress < 60 ? t('detectingBackground') :
+                             progress < 90 ? t('removingBackground') :
+                             t('finishing')}
+                          </span>
+                          <span>{Math.round(progress)}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Results Section
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Original Image */}
+                    <div className="relative rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800/50">
+                      <img
+                        src={previewUrl!}
+                        alt="Original"
+                        className="w-full h-[50vh] object-contain"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 p-4">
+                        <p className="text-white text-center font-medium">
+                          {t('original')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Processed Image */}
+                    <div className="relative rounded-xl overflow-hidden bg-[url('/grid.png')] bg-repeat">
+                      <img
+                        src={processedImageUrl}
+                        alt="Resultado procesado"
+                        className="w-full h-[50vh] object-contain transition-transform duration-300"
+                        style={{ transform: `rotate(${rotation}deg)` }}
+                      />
+                      <div className="absolute top-4 right-4 flex gap-2">
+                        <button
+                          onClick={rotateCounterclockwise}
+                          className="p-3 bg-white/90 dark:bg-black/90 rounded-full 
+                                    hover:bg-white dark:hover:bg-black 
+                                    transition-all duration-200 shadow-lg hover:shadow-xl 
+                                    transform hover:scale-110 backdrop-blur-sm"
+                          title="Rotar en sentido antihorario"
+                        >
+                          <svg 
+                            width="24" 
+                            height="24" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            className="text-gray-800 dark:text-gray-200"
+                          >
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={rotateClockwise}
+                          className="p-3 bg-white/90 dark:bg-black/90 rounded-full 
+                                    hover:bg-white dark:hover:bg-black 
+                                    transition-all duration-200 shadow-lg hover:shadow-xl 
+                                    transform hover:scale-110 backdrop-blur-sm"
+                          title="Rotar en sentido horario"
+                        >
+                          <svg 
+                            width="24" 
+                            height="24" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            className="text-gray-800 dark:text-gray-200"
+                          >
+                            <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="absolute bottom-4 right-4">
+                        <a
+                          href={processedImageUrl}
+                          download="imagen-procesada.png"
+                          className="flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-black/90 
+                                    rounded-lg hover:bg-white dark:hover:bg-black 
+                                    transition-all duration-200 shadow-lg hover:shadow-xl 
+                                    transform hover:scale-105 backdrop-blur-sm
+                                    text-gray-800 dark:text-gray-200 font-medium"
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                          {t('download')}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Process Another Image Button */}
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={handleReset}
+                      className="px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium
+                               hover:bg-gray-200 dark:hover:bg-gray-600
+                               transition-all duration-200 transform hover:scale-[1.02]
+                               shadow-lg hover:shadow-xl"
+                    >
+                      {t('processAnother')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* Bottom bar remains the same */}
       <div className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm p-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-2">
@@ -595,7 +675,9 @@ export default function Home() {
                       className="h-20 w-20 object-cover rounded-lg border border-gray-700 hover:border-blue-500 transition-colors"
                     />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                      <span className="text-white text-xs">Ver</span>
+                      <span className="text-white text-xs">
+                        {t('view')}
+                      </span>
                     </div>
                   </button>
                   {/* Delete button */}
@@ -606,7 +688,7 @@ export default function Home() {
                     }}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 
                                transition-opacity flex items-center justify-center hover:bg-red-600"
-                    title="Eliminar"
+                    title={t('delete')}
                   >
                     <svg 
                       className="w-4 h-4 text-white" 
@@ -648,7 +730,9 @@ export default function Home() {
                   d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                 />
               </svg>
-              <span className="hidden sm:inline">Descargar todos</span>
+              <span className="hidden sm:inline">
+                {t('downloadAll')}
+              </span>
             </button>
           </div>
         </div>
@@ -659,7 +743,9 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
             <div className="p-4 border-b border-gray-800 flex justify-between items-center">
-              <h3 className="text-white font-medium">Imagen Procesada</h3>
+              <h3 className="text-white font-medium">
+                {t('processed')}
+              </h3>
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => deleteImage(selectedImage.id)}
@@ -678,7 +764,7 @@ export default function Home() {
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
                     />
                   </svg>
-                  <span>Eliminar de la memoria</span>
+                  <span>{t('deleteFromMemory')}</span>
                 </button>
                 <button
                   onClick={() => setSelectedImage(null)}
@@ -693,7 +779,9 @@ export default function Home() {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <p className="text-gray-400 text-sm">Original</p>
+                  <p className="text-gray-400 text-sm">
+                    {t('original')}
+                  </p>
                   <div className="bg-gray-800 rounded-lg overflow-hidden">
                     <img
                       src={selectedImage.originalUrl}
@@ -703,7 +791,9 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-gray-400 text-sm">Procesada</p>
+                  <p className="text-gray-400 text-sm">
+                    {t('processed')}
+                  </p>
                   <div className="bg-[url('/grid.png')] bg-repeat rounded-lg overflow-hidden">
                     <img
                       src={selectedImage.processedUrl}

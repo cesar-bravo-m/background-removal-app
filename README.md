@@ -43,14 +43,14 @@ git clone https://github.com/cesar-bravo-m/background-removal-app.git
 cd background-removal-app
 ```
 
-3. Build and run the Docker containers:
-```bash
-docker compose up --build
-```
-
-4. Create a .env file in the root directory with a random secret key:
+3. Create a .env file in the root directory with a random secret key:
 ```bash
 SECRET_KEY=your_secret_key
+```
+
+4. Build and run the Docker containers:
+```bash
+docker compose up --build
 ```
 
 5. Access the application at `http://localhost`.

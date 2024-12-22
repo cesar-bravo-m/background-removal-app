@@ -24,15 +24,10 @@ def create_app(*args, **kwargs):
     })
 
     def remove_background(filename):
-        print("### Removing background from: ", filename)
         img = Image.open(filename).convert("RGBA")
         img_array = np.array(img)
         result = remove(img_array)
         return Image.fromarray(result)
-
-    @app.route('/')
-    def index():
-        return "Hello World"
 
     @app.route('/upload', methods=['POST'])
     def upload():

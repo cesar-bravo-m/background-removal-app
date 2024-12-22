@@ -2,6 +2,8 @@
 
 A web application that uses AI to remove backgrounds from images. Built with Next.js for the frontend and Flask for the backend, using the U2-Net model for background removal.
 
+![image](https://github.com/user-attachments/assets/e0574c0a-e932-4abf-96b9-7f33b4befeff)
+
 ## Features
 
 - Instant background removal from images

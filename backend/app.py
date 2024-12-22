@@ -9,6 +9,7 @@ import numpy as np
 import secrets
 
 UPLOAD_FOLDER = '/app/uploads'
+# UPLOAD_FOLDER = '/Code/bg-remover/frontend/uploads'
 
 def create_app(*args, **kwargs):
     app = Flask(__name__)

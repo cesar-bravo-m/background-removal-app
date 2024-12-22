@@ -30,10 +30,10 @@ export async function POST(request: Request) {
     const filepath = join(process.cwd(), 'uploads', filename);
     await writeFile(filepath, buffer);
 
-    // const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    const backendUrl = 'http://127.0.0.1:5000';
-    // const key = process.env.SECRET_KEY;
-    const key = 'key';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    // const backendUrl = 'http://127.0.0.1:5000';
+    const key = process.env.SECRET_KEY;
+    // const key = 'key';
     const response = await fetch(`${backendUrl}/upload`, {
       method: 'POST',
       headers: {

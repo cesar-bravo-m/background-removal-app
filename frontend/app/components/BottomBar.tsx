@@ -1,4 +1,6 @@
+'use client'
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+// import JSZip from 'jszip';
 import {
     selectImages,
     deleteImage
@@ -12,6 +14,9 @@ import { t } from '@/app/translations';
 export default function BottomBar() {
     const dispatch = useAppDispatch();
     const images = useAppSelector(selectImages);
+
+    // TODO: Implement this
+    // const downloadAllImages = async () => {}
 
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm p-4">

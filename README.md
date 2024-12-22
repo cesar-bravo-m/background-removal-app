@@ -2,6 +2,8 @@
 
 A web application that uses AI to remove backgrounds from images. Built with Next.js for the frontend and Flask for the backend, using the U2-Net model for background removal.
 
+![image](https://github.com/user-attachments/assets/e0574c0a-e932-4abf-96b9-7f33b4befeff)
+
 ## Features
 
 - Instant background removal from images
@@ -41,14 +43,14 @@ git clone https://github.com/cesar-bravo-m/background-removal-app.git
 cd background-removal-app
 ```
 
-3. Build and run the Docker containers:
-```bash
-docker compose up --build
-```
-
-4. Create a .env file in the backend directory with a random secret key:
+3. Create a .env file in the root directory with a random secret key:
 ```bash
 SECRET_KEY=your_secret_key
 ```
 
-5. Access the application at `http://localhost:3000`.
+4. Build and run the Docker containers:
+```bash
+docker compose up --build
+```
+
+5. Access the application at `http://localhost`.

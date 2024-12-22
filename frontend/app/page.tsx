@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import JSZip from 'jszip';
 import { translations } from './translations';
-import Image from 'next/image';
 
 interface ProcessedImage {
   id: string;
@@ -97,26 +96,39 @@ export default function Home() {
   }, []);
 
   const saveToHistory = async (original: string, processed: string) => {
-    const [originalValid, processedValid] = await Promise.all([
-      validateImage(original),
-      validateImage(processed)
-    ]);
+    try {
+      // Convert blob URLs to base64
+      const [originalBlob, processedBlob] = await Promise.all([
+        fetch(original).then(r => r.blob()),
+        fetch(processed).then(r => r.blob())
+      ]);
 
-    if (!originalValid || !processedValid) {
-      console.warn('Invalid image URLs detected, not saving to history');
-      return;
+      const [originalBase64, processedBase64] = await Promise.all([
+        new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(originalBlob);
+        }),
+        new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(processedBlob);
+        })
+      ]);
+
+      const newImage: ProcessedImage = {
+        id: crypto.randomUUID(),
+        originalUrl: originalBase64,
+        processedUrl: processedBase64,
+        timestamp: Date.now()
+      };
+
+      const updatedImages = [newImage, ...previousImages].slice(0, 10);
+      setPreviousImages(updatedImages);
+      localStorage.setItem('processedImages', JSON.stringify(updatedImages));
+    } catch (error) {
+      console.error('Error saving to history:', error);
     }
-
-    const newImage: ProcessedImage = {
-      id: crypto.randomUUID(),
-      originalUrl: original,
-      processedUrl: processed,
-      timestamp: Date.now()
-    };
-
-    const updatedImages = [newImage, ...previousImages].slice(0, 10);
-    setPreviousImages(updatedImages);
-    localStorage.setItem('processedImages', JSON.stringify(updatedImages));
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -417,7 +429,7 @@ export default function Home() {
                       </label>
                     ) : (
                       <div className="relative group">
-                        <Image
+                        <img
                           src={previewUrl}
                           alt="Vista previa"
                           className="w-full h-[50vh] object-contain rounded-xl"
@@ -446,7 +458,7 @@ export default function Home() {
                             onClick={() => handleSampleSelect(sample.src)}
                             className="relative group aspect-square rounded-lg overflow-hidden"
                           >
-                            <Image
+                            <img
                               src={sample.src}
                               alt={sample.name}
                               className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
@@ -520,7 +532,7 @@ export default function Home() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Original Image */}
                     <div className="relative rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800/50">
-                      <Image
+                      <img
                         src={previewUrl!}
                         alt="Original"
                         className="w-full h-[50vh] object-contain"
@@ -534,7 +546,7 @@ export default function Home() {
 
                     {/* Processed Image */}
                     <div className="relative rounded-xl overflow-hidden bg-[url('/grid.png')] bg-repeat">
-                      <Image
+                      <img
                         src={processedImageUrl}
                         alt="Resultado procesado"
                         className="w-full h-[50vh] object-contain transition-transform duration-300"
@@ -671,7 +683,7 @@ export default function Home() {
                     onClick={() => setSelectedImage(img)}
                     className="relative"
                   >
-                    <Image
+                    <img
                       src={img.processedUrl}
                       alt="Processed thumbnail"
                       className="h-20 w-20 object-cover rounded-lg border border-gray-700 hover:border-blue-500 transition-colors"
@@ -785,7 +797,7 @@ export default function Home() {
                     {t('original')}
                   </p>
                   <div className="bg-gray-800 rounded-lg overflow-hidden">
-                    <Image
+                    <img
                       src={selectedImage.originalUrl}
                       alt="Original"
                       className="w-full h-[50vh] object-contain"
@@ -797,7 +809,7 @@ export default function Home() {
                     {t('processed')}
                   </p>
                   <div className="bg-[url('/grid.png')] bg-repeat rounded-lg overflow-hidden">
-                    <Image
+                    <img
                       src={selectedImage.processedUrl}
                       alt="Processed"
                       className="w-full h-[50vh] object-contain"

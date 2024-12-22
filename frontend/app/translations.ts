@@ -1,6 +1,12 @@
 type Translations = {
   [key: string]: {
-    [key: string]: string;
+    [key: string | 'errorMessages']: string | {
+      selectFile: string;
+      invalidType: string;
+      uploadError: string;
+      processingError: string;
+      sampleError: string;
+    };
   };
 };
 

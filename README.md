@@ -21,7 +21,7 @@ A web application that uses AI to remove backgrounds from images. Built with Nex
 
 - **Frontend**: Next.js 15, TypeScript, Tailwind CSS
 - **Backend**: Python, Flask, rembg (U2-Net)
-- **Infrastructure**: Docker, Docker Compose
+- **Infrastructure**: Docker, Docker Compose, Clerk
 
 ## Running Locally
 
@@ -43,9 +43,10 @@ git clone https://github.com/cesar-bravo-m/background-removal-app.git
 cd background-removal-app
 ```
 
-3. Create a .env file in the root directory with a random secret key:
+3. Create a .env file in the root directory with a random secret key and NEXT_PUBLIC_USE_CLERK=false:
 ```bash
 SECRET_KEY=your_secret_key
+NEXT_PUBLIC_USE_CLERK=false
 ```
 
 4. Build and run the Docker containers:

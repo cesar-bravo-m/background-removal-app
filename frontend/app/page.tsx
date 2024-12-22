@@ -14,6 +14,25 @@ import {
 } from '@/lib/features/images/imagesSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import BottomBar from "./components/BottomBar";
+import { 
+  setSelectedFile,
+  selectSelectedFile,
+  selectRotation,
+  reset,
+  setPreviewUrl,
+  selectPreviewUrl,
+  selectError,
+  selectProcessedImageUrl,
+  setError,
+  setProcessedImageUrl,
+  selectSelectImage,
+  setSelectImage,
+  selectIsProcessing,
+  setRotation,
+  setIsProcessing,
+  selectProgress,
+  setProgress,
+} from '@/lib/features/bgremover/bgremoverSlice';
 
 const sampleImages = [
   { src: '/samples/1.webp', name: 'Muestra 1' },
@@ -27,30 +46,27 @@ const sampleImages = [
 export default function Home() {
   const dispatch = useAppDispatch();
   const images = useAppSelector(selectImages);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [selectedImage, setSelectedImage] = useState<ProcessedImage | null>(null);
-  const [language,] = useState<'en' | 'es'>('en');
+  const selectedFile = useAppSelector(selectSelectedFile);
+  const previewUrl = useAppSelector(selectPreviewUrl);
+  const processedImageUrl = useAppSelector(selectProcessedImageUrl);
+  const error = useAppSelector(selectError);
+  const selectedImage = useAppSelector(selectSelectImage);
+  const isProcessing = useAppSelector(selectIsProcessing);
+  const rotation = useAppSelector(selectRotation);
+  const progress = useAppSelector(selectProgress);
+  const language = 'en';
 
   useEffect(() => {
     let progressInterval: NodeJS.Timeout;
 
     if (isProcessing) {
-      setProgress(0);
+      dispatch(setProgress(0));
       progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 95) return prev;
-          const increment = Math.random() * 15;
-          return Math.min(prev + increment, 95);
-        });
+        const newProgress = progress + Math.random() * 15;
+        dispatch(setProgress(Math.min(newProgress, 95)));
       }, 500);
     } else {
-      setProgress(100);
+      dispatch(setProgress(100));
     }
 
     return () => {
@@ -121,33 +137,33 @@ export default function Home() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    setError(null);
+    dispatch(setError(null));
     
     if (file) {
       // Check file type
       if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
-        setError('Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG');
-        setSelectedFile(null);
-        setPreviewUrl(null);
+        dispatch(setError('Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG'));
+        dispatch(setSelectedFile(null));
+        dispatch(setPreviewUrl(null));
         return;
       }
 
-      setSelectedFile(file);
+      dispatch(setSelectedFile(file));
       // Create preview URL
       const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      dispatch(setPreviewUrl(url));
     }
   };
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setError(t('error_selectFile'));
+      dispatch(setError(t('error_selectFile')));
       return;
     }
 
     try {
-      setIsProcessing(true);
-      setError(null);
+      dispatch(setIsProcessing(true));
+      dispatch(setError(null));
       
       const formData = new FormData();
       formData.append('file', selectedFile);
@@ -158,39 +174,31 @@ export default function Home() {
       });
 
       const processedUrl = URL.createObjectURL(await uploadResponse.blob());
-      setProcessedImageUrl(processedUrl);
+      dispatch(setProcessedImageUrl(processedUrl));
       
       // Save to history
       saveToHistory(previewUrl!, processedUrl);
       
     } catch (error) {
-      setError(error instanceof Error ? error.message : t('error_processingError'));
+      dispatch(setError(error instanceof Error ? error.message : t('error_processingError')));
     } finally {
-      setIsProcessing(false);
+      dispatch(setIsProcessing(false));
     }
   };
 
-  const handleReset = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setProcessedImageUrl(null);
-    setError(null);
-    setRotation(0);
-  };
-
   const rotateClockwise = () => {
-    setRotation((prev) => (prev + 90) % 360);
+    dispatch(setRotation((rotation + 90) % 360));
   };
 
   const rotateCounterclockwise = () => {
-    setRotation((prev) => (prev - 90 + 360) % 360);
+    dispatch(setRotation((rotation - 90 + 360) % 360));
   };
 
   const deleteImage = (id: string) => {
     dispatch(deleteImageAction(id));
     // If the deleted image is currently selected in modal, close the modal
     if (selectedImage?.id === id) {
-      setSelectedImage(null);
+      dispatch(setSelectImage(null));
     }
   };
 
@@ -207,15 +215,15 @@ export default function Home() {
     if (file) {
       // Check file type
       if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
-        setError('Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG');
-        setSelectedFile(null);
-        setPreviewUrl(null);
+        dispatch(setError('Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG'));
+        dispatch(setSelectedFile(null));
+        dispatch(setPreviewUrl(null));
         return;
       }
 
-      setSelectedFile(file);
+      dispatch(setSelectedFile(file));
       const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      dispatch(setPreviewUrl(url));
     }
   };
 
@@ -276,9 +284,9 @@ export default function Home() {
       const blob = await response.blob();
       const file = new File([blob], sampleSrc.split('/').pop() || 'sample.jpg', { type: blob.type });
       
-      setSelectedFile(file);
+      dispatch(setSelectedFile(file));
       const url = URL.createObjectURL(blob);
-      setPreviewUrl(url);
+      dispatch(setPreviewUrl(url));
     } catch (error) {
       console.error('Error al cargar la imagen de muestra:', error);
       setError('Error al cargar la imagen de muestra');
@@ -548,7 +556,7 @@ export default function Home() {
                   {/* Process Another Image Button */}
                   <div className="flex justify-center mt-4">
                     <button
-                      onClick={handleReset}
+                      onClick={() => dispatch(reset())}
                       className="px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium
                                hover:bg-gray-200 dark:hover:bg-gray-600
                                transition-all duration-200 transform hover:scale-[1.02]
@@ -595,7 +603,7 @@ export default function Home() {
                   <span>{t('deleteFromMemory')}</span>
                 </button>
                 <button
-                  onClick={() => setSelectedImage(null)}
+                  onClick={() => dispatch(setSelectImage(null))}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

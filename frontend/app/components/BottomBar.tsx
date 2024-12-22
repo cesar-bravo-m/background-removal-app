@@ -4,14 +4,15 @@ import {
     deleteImage
 } from "@/lib/features/images/imagesSlice";
 import {
-    setSelectImage
+    setSelectImage,
+    reset
 } from "@/lib/features/bgremover/bgremoverSlice";
 import { t } from '@/app/translations';
 
 export default function BottomBar() {
     const dispatch = useAppDispatch();
     const images = useAppSelector(selectImages);
-    console.log("### images", images);
+
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm p-4">
         <div className="max-w-7xl mx-auto">
@@ -19,7 +20,7 @@ export default function BottomBar() {
             <div className="flex gap-4 overflow-x-auto pb-2 pt-2 flex-grow">
               {/* New Upload Button */}
               <button
-                // onClick={handleReset}
+                onClick={() => dispatch(reset())}
                 className="flex-shrink-0 h-20 w-20 rounded-lg border-2 border-dashed border-gray-700 
                          hover:border-blue-500 transition-colors flex items-center justify-center
                          group bg-gray-800/50 hover:bg-gray-800"

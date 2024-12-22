@@ -53,4 +53,4 @@ docker compose up --build
 SECRET_KEY=your_secret_key
 ```
 
-5. Access the application at `http://localhost:3000`.
+5. Access the application at `http://localhost`.

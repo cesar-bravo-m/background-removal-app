@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function FAQ() {
   const faqs = [
     {
@@ -26,7 +28,7 @@ export default function FAQ() {
     <div className="min-h-screen bg-black text-white p-4 sm:p-8">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <a 
+          <Link 
             href="/"
             className="inline-flex items-center text-gray-400 hover:text-white transition-colors"
           >
@@ -44,7 +46,7 @@ export default function FAQ() {
               />
             </svg>
             Volver
-          </a>
+          </Link>
         </div>
 
         <h1 className="text-3xl font-bold mb-8">Preguntas Frecuentes</h1>

@@ -1,12 +1,6 @@
 type Translations = {
   [key: string]: {
-    [key: string | 'errorMessages']: string | {
-      selectFile: string;
-      invalidType: string;
-      uploadError: string;
-      processingError: string;
-      sampleError: string;
-    };
+    [key: string]: string;
   };
 };
 
@@ -35,13 +29,11 @@ export const translations: Translations = {
     delete: "Delete",
     deleteFromMemory: "Delete from memory",
     noProcessedImages: "No processed images",
-    errorMessages: {
-      selectFile: "Please select a file first",
-      invalidType: "Please select only WEBP, PNG, JPEG or JPG files",
-      uploadError: "Error uploading file",
-      processingError: "Error processing image",
-      sampleError: "Error loading sample image"
-    }
+    error_selectFile: "Please select a file first",
+    error_invalidType: "Please select only WEBP, PNG, JPEG or JPG files",
+    error_uploadError: "Error uploading file",
+    error_processingError: "Error processing image",
+    error_sampleError: "Error loading sample image"
   },
   es: {
     title: "Eliminador de Fondos",
@@ -67,12 +59,10 @@ export const translations: Translations = {
     delete: "Eliminar",
     deleteFromMemory: "Eliminar de la memoria",
     noProcessedImages: "No hay imágenes procesadas",
-    errorMessages: {
-      selectFile: "Por favor, selecciona un archivo primero",
-      invalidType: "Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG",
-      uploadError: "Error al subir el archivo",
-      processingError: "Error al procesar la imagen",
-      sampleError: "Error al cargar la imagen de muestra"
-    }
+    error_selectFile: "Por favor, selecciona un archivo primero",
+    error_invalidType: "Por favor, selecciona solo archivos WEBP, PNG, JPEG o JPG",
+    error_uploadError: "Error al subir el archivo",
+    error_processingError: "Error al procesar la imagen",
+    error_sampleError: "Error al cargar la imagen de muestra"
   }
 }; 

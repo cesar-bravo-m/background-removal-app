@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import JSZip from 'jszip';
 import { translations } from './translations';
+import Image from 'next/image';
 
 interface ProcessedImage {
   id: string;
@@ -12,7 +13,7 @@ interface ProcessedImage {
 
 const validateImage = (url: string): Promise<boolean> => {
   return new Promise((resolve) => {
-    const img = new Image();
+    const img = new HTMLImageElement();
     img.onload = () => resolve(true);
     img.onerror = () => resolve(false);
     img.src = url;
@@ -285,6 +286,7 @@ export default function Home() {
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
     } catch (error) {
+      console.error('Error al cargar la imagen de muestra:', error);
       setError('Error al cargar la imagen de muestra');
     }
   };
@@ -415,7 +417,7 @@ export default function Home() {
                       </label>
                     ) : (
                       <div className="relative group">
-                        <img
+                        <Image
                           src={previewUrl}
                           alt="Vista previa"
                           className="w-full h-[50vh] object-contain rounded-xl"
@@ -444,7 +446,7 @@ export default function Home() {
                             onClick={() => handleSampleSelect(sample.src)}
                             className="relative group aspect-square rounded-lg overflow-hidden"
                           >
-                            <img
+                            <Image
                               src={sample.src}
                               alt={sample.name}
                               className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
@@ -469,10 +471,10 @@ export default function Home() {
                   {error && (
                     <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg">
                       <p className="text-sm text-red-600 dark:text-red-400 text-center">
-                        {error === t('selectFile') ? t('selectFile') :
-                         error === t('invalidType') ? t('invalidType') :
-                         error === t('uploadError') ? t('uploadError') :
-                         error === t('processingError') ? t('processingError') :
+                        {error === t('error_selectFile') ? t('error_selectFile') :
+                         error === t('error_invalidType') ? t('error_invalidType') :
+                         error === t('error_uploadError') ? t('error_uploadError') :
+                         error === t('error_processingError') ? t('error_processingError') :
                          error}
                       </p>
                     </div>
@@ -518,7 +520,7 @@ export default function Home() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Original Image */}
                     <div className="relative rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800/50">
-                      <img
+                      <Image
                         src={previewUrl!}
                         alt="Original"
                         className="w-full h-[50vh] object-contain"
@@ -532,7 +534,7 @@ export default function Home() {
 
                     {/* Processed Image */}
                     <div className="relative rounded-xl overflow-hidden bg-[url('/grid.png')] bg-repeat">
-                      <img
+                      <Image
                         src={processedImageUrl}
                         alt="Resultado procesado"
                         className="w-full h-[50vh] object-contain transition-transform duration-300"
@@ -669,7 +671,7 @@ export default function Home() {
                     onClick={() => setSelectedImage(img)}
                     className="relative"
                   >
-                    <img
+                    <Image
                       src={img.processedUrl}
                       alt="Processed thumbnail"
                       className="h-20 w-20 object-cover rounded-lg border border-gray-700 hover:border-blue-500 transition-colors"
@@ -783,7 +785,7 @@ export default function Home() {
                     {t('original')}
                   </p>
                   <div className="bg-gray-800 rounded-lg overflow-hidden">
-                    <img
+                    <Image
                       src={selectedImage.originalUrl}
                       alt="Original"
                       className="w-full h-[50vh] object-contain"
@@ -795,7 +797,7 @@ export default function Home() {
                     {t('processed')}
                   </p>
                   <div className="bg-[url('/grid.png')] bg-repeat rounded-lg overflow-hidden">
-                    <img
+                    <Image
                       src={selectedImage.processedUrl}
                       alt="Processed"
                       className="w-full h-[50vh] object-contain"

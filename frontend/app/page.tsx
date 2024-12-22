@@ -1,5 +1,21 @@
 'use client'
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface ProcessedImage {
+  id: string;
+  originalUrl: string;
+  processedUrl: string;
+  timestamp: number;
+}
+
+const validateImage = (url: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+};
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -8,6 +24,83 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [previousImages, setPreviousImages] = useState<ProcessedImage[]>([]);
+  const [selectedImage, setSelectedImage] = useState<ProcessedImage | null>(null);
+
+  useEffect(() => {
+    let progressInterval: NodeJS.Timeout;
+
+    if (isProcessing) {
+      setProgress(0);
+      progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 95) return prev;
+          const increment = Math.random() * 15;
+          return Math.min(prev + increment, 95);
+        });
+      }, 500);
+    } else {
+      setProgress(100);
+    }
+
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+    };
+  }, [isProcessing]);
+
+  useEffect(() => {
+    const loadAndValidateImages = async () => {
+      const stored = localStorage.getItem('processedImages');
+      if (!stored) return;
+
+      const storedImages: ProcessedImage[] = JSON.parse(stored);
+      const validatedImages = await Promise.all(
+        storedImages.map(async (img) => {
+          const [originalValid, processedValid] = await Promise.all([
+            validateImage(img.originalUrl),
+            validateImage(img.processedUrl)
+          ]);
+          return { img, isValid: originalValid && processedValid };
+        })
+      );
+
+      const validImages = validatedImages
+        .filter(({ isValid }) => isValid)
+        .map(({ img }) => img);
+
+      if (validImages.length !== storedImages.length) {
+        localStorage.setItem('processedImages', JSON.stringify(validImages));
+      }
+
+      setPreviousImages(validImages);
+    };
+
+    loadAndValidateImages();
+  }, []);
+
+  const saveToHistory = async (original: string, processed: string) => {
+    const [originalValid, processedValid] = await Promise.all([
+      validateImage(original),
+      validateImage(processed)
+    ]);
+
+    if (!originalValid || !processedValid) {
+      console.warn('Invalid image URLs detected, not saving to history');
+      return;
+    }
+
+    const newImage: ProcessedImage = {
+      id: crypto.randomUUID(),
+      originalUrl: original,
+      processedUrl: processed,
+      timestamp: Date.now()
+    };
+
+    const updatedImages = [newImage, ...previousImages].slice(0, 10);
+    setPreviousImages(updatedImages);
+    localStorage.setItem('processedImages', JSON.stringify(updatedImages));
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -39,7 +132,6 @@ export default function Home() {
       setIsProcessing(true);
       setError(null);
       
-      // First, upload the file to our API
       const formData = new FormData();
       formData.append('file', selectedFile);
 
@@ -48,13 +140,11 @@ export default function Home() {
         body: formData,
       });
 
-      // const uploadData = await uploadResponse.json();
-      // if (!uploadResponse.ok) {
-      //   throw new Error(uploadData.error || 'Error uploading file');
-      // }
-      
       const processedUrl = URL.createObjectURL(await uploadResponse.blob());
       setProcessedImageUrl(processedUrl);
+      
+      // Save to history
+      saveToHistory(previewUrl!, processedUrl);
       
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error al procesar la imagen');
@@ -79,8 +169,20 @@ export default function Home() {
     setRotation((prev) => (prev - 90 + 360) % 360);
   };
 
+  const deleteImage = (id: string) => {
+    setPreviousImages(prev => {
+      const newImages = prev.filter(img => img.id !== id);
+      localStorage.setItem('processedImages', JSON.stringify(newImages));
+      return newImages;
+    });
+    // If the deleted image is currently selected in modal, close the modal
+    if (selectedImage?.id === id) {
+      setSelectedImage(null);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-black">
       <main className="w-full max-w-7xl">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
           <div className="px-6 py-8 sm:px-8 border-b border-gray-200 dark:border-gray-700">
@@ -167,25 +269,39 @@ export default function Home() {
                   </div>
                 )}
 
-                <button
-                  onClick={handleUpload}
-                  disabled={!selectedFile || isProcessing}
-                  className="w-full mt-6 px-6 py-3 rounded-xl bg-blue-500 text-white font-medium
-                           hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed
-                           transition-all duration-200 transform hover:scale-[1.02]
-                           disabled:hover:scale-100 shadow-lg hover:shadow-xl
-                           disabled:shadow-none"
-                >
-                  {isProcessing ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Procesando...
-                    </span>
-                  ) : 'Eliminar Fondo'}
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={handleUpload}
+                    disabled={!selectedFile || isProcessing}
+                    className="w-full mt-6 px-6 py-3 rounded-xl bg-blue-600 text-white font-medium
+                             hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed
+                             transition-all duration-200 transform hover:scale-[1.02]
+                             disabled:hover:scale-100 shadow-lg hover:shadow-xl
+                             disabled:shadow-none"
+                  >
+                    {isProcessing ? 'Procesando...' : 'Eliminar Fondo'}
+                  </button>
+
+                  {isProcessing && (
+                    <div className="mt-4 space-y-2">
+                      <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500 transition-all duration-300 ease-out"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-400">
+                        <span>
+                          {progress < 30 ? 'Analizando imagen...' :
+                           progress < 60 ? 'Detectando fondo...' :
+                           progress < 90 ? 'Removiendo fondo...' :
+                           'Finalizando...'}
+                        </span>
+                        <span>{Math.round(progress)}%</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               // Results Section
@@ -306,6 +422,143 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {previousImages.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm p-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex gap-4 overflow-x-auto pb-2 pt-2">
+              {/* New Upload Button */}
+              <button
+                onClick={handleReset}
+                className="flex-shrink-0 h-20 w-20 rounded-lg border-2 border-dashed border-gray-700 
+                         hover:border-blue-500 transition-colors flex items-center justify-center
+                         group bg-gray-800/50 hover:bg-gray-800"
+              >
+                <svg 
+                  className="w-8 h-8 text-gray-500 group-hover:text-blue-500 transition-colors" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M12 4v16m8-8H4" 
+                  />
+                </svg>
+              </button>
+
+              {/* Previous Images */}
+              {previousImages.map((img) => (
+                <div key={img.id} className="flex-shrink-0 relative group">
+                  <button
+                    onClick={() => setSelectedImage(img)}
+                    className="relative"
+                  >
+                    <img
+                      src={img.processedUrl}
+                      alt="Processed thumbnail"
+                      className="h-20 w-20 object-cover rounded-lg border border-gray-700 hover:border-blue-500 transition-colors"
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <span className="text-white text-xs">Ver</span>
+                    </div>
+                  </button>
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteImage(img.id);
+                    }}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 
+                               transition-opacity flex items-center justify-center hover:bg-red-600"
+                    title="Eliminar"
+                  >
+                    <svg 
+                      className="w-4 h-4 text-white" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M6 18L18 6M6 6l12 12" 
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="text-white font-medium">Imagen Procesada</h3>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => deleteImage(selectedImage.id)}
+                  className="text-red-500 hover:text-red-400 transition-colors flex items-center gap-2"
+                >
+                  <svg 
+                    className="w-5 h-5" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                    />
+                  </svg>
+                  <span>Eliminar de la memoria</span>
+                </button>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <p className="text-gray-400 text-sm">Original</p>
+                  <div className="bg-gray-800 rounded-lg overflow-hidden">
+                    <img
+                      src={selectedImage.originalUrl}
+                      alt="Original"
+                      className="w-full h-[50vh] object-contain"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-gray-400 text-sm">Procesada</p>
+                  <div className="bg-[url('/grid.png')] bg-repeat rounded-lg overflow-hidden">
+                    <img
+                      src={selectedImage.processedUrl}
+                      alt="Processed"
+                      className="w-full h-[50vh] object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

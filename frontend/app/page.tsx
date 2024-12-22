@@ -375,25 +375,25 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
+      <div className="flex-1 flex items-center justify-center p-2 sm:p-4" style={{ paddingBottom: '10rem' }}>
         <main className="w-full max-w-7xl">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-            <div className="px-6 py-8 sm:px-8 border-b border-gray-200 dark:border-gray-700">
-              <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
+            <div className="px-4 py-4 sm:px-6 border-b border-gray-200 dark:border-gray-700">
+              <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white">
                 {t('title')}
               </h1>
-              <p className="mt-2 text-center text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-center text-gray-600 dark:text-gray-400 text-sm">
                 {t('subtitle')}
               </p>
             </div>
 
-            <div className="p-6 sm:p-8">
+            <div className="p-4 sm:p-6">
               {!processedImageUrl ? (
                 // Upload Section
                 <div className="max-w-md mx-auto">
                   <div 
                     className={`relative group rounded-xl overflow-hidden ${
-                      !previewUrl ? 'border-2 border-dashed border-gray-300 dark:border-gray-600 p-8' : ''
+                      !previewUrl ? 'border-2 border-dashed border-gray-300 dark:border-gray-600 p-6' : ''
                     } transition-colors hover:border-blue-500 dark:hover:border-blue-400 
                     bg-gray-50 dark:bg-gray-800/50`}
                     onDragOver={handleDragOver}
@@ -432,7 +432,7 @@ export default function Home() {
                         <img
                           src={previewUrl}
                           alt="Vista previa"
-                          className="w-full h-[50vh] object-contain rounded-xl"
+                          className="w-full h-[40vh] object-contain rounded-xl"
                         />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <label
@@ -447,8 +447,8 @@ export default function Home() {
                   </div>
 
                   {!previewUrl && (
-                    <div className="mt-8">
-                      <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <div className="mt-4">
+                      <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-2">
                         {t('sampleImagesText')}
                       </p>
                       <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
@@ -528,14 +528,14 @@ export default function Home() {
                 </div>
               ) : (
                 // Results Section
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Original Image */}
                     <div className="relative rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800/50">
                       <img
                         src={previewUrl!}
                         alt="Original"
-                        className="w-full h-[50vh] object-contain"
+                        className="w-full h-[40vh] object-contain"
                       />
                       <div className="absolute inset-x-0 bottom-0 p-4">
                         <p className="text-white text-center font-medium">
@@ -549,7 +549,7 @@ export default function Home() {
                       <img
                         src={processedImageUrl}
                         alt="Resultado procesado"
-                        className="w-full h-[50vh] object-contain transition-transform duration-300"
+                        className="w-full h-[40vh] object-contain transition-transform duration-300"
                         style={{ transform: `rotate(${rotation}deg)` }}
                       />
                       <div className="absolute top-4 right-4 flex gap-2">
@@ -631,7 +631,7 @@ export default function Home() {
                   </div>
 
                   {/* Process Another Image Button */}
-                  <div className="flex justify-center mt-8">
+                  <div className="flex justify-center mt-4">
                     <button
                       onClick={handleReset}
                       className="px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium
